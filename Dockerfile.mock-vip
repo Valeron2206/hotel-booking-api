@@ -1,0 +1,14 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Копируем файлы
+COPY mock-vip/package.json ./
+COPY mock-vip/server.js ./
+
+# Устанавливаем зависимости
+RUN npm install
+
+EXPOSE 3001
+
+CMD ["node", "server.js"]

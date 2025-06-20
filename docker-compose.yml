@@ -1,0 +1,80 @@
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: hotel_booking_db
+    environment:
+      POSTGRES_DB: hotel_booking
+      POSTGRES_USER: hotel_user
+      POSTGRES_PASSWORD: hotel_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - hotel_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hotel_user -d hotel_booking"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Hotel Booking API
+  api:
+    build: .
+    container_name: hotel_booking_api
+    environment:
+      NODE_ENV: development
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: hotel_booking
+      DB_USER: hotel_user
+      DB_PASSWORD: hotel_password
+      VIP_API_URL: http://mock-vip-api:3001/check-vip
+      PORT: 3000
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - hotel_network
+    command: npm run dev
+
+  # Mock VIP API Service (для тестирования)
+  mock-vip-api:
+    build: 
+      context: .
+      dockerfile: Dockerfile.mock-vip
+    container_name: mock_vip_api
+    ports:
+      - "3001:3001"
+    networks:
+      - hotel_network
+    environment:
+      PORT: 3001
+
+  # pgAdmin для управления БД (опционально)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: hotel_booking_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@hotel.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    networks:
+      - hotel_network
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
+
+networks:
+  hotel_network:
+    driver: bridge
