@@ -60,16 +60,23 @@ Host: `db`, Port: `5432`, User: `hotel_user`, Password: `hotel_password`
 
 Проект реализован на Node.js и PostgreSQL, полностью контейнеризирован с помощью Docker.
 
-```
-Client (UI, Postman)
-        ↓
-   Express API
-        ↓
-   Services (Бизнес-логика)
-        ↓
-   Sequelize (ORM)
-        ↓
-   PostgreSQL
-        ↓
-Mock VIP API (Внешний сервис)
+```text
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Client App    │    │   Swagger UI    │    │    pgAdmin      │
+│ (UI, Postman)   │    │ (Документация)  │    │ (DB Manager)    │
+└─────────┬───────┘    └─────────┬───────┘    └─────────┬───────┘
+          │                      │                      │
+          └──────────────┬───────┴───────┬──────────────┘
+                         │               │
+                 ┌───────▼───────────────▼───────┐
+                 │      Hotel Booking API        │
+                 │           (Node.js)           │
+                 └──────────────┬────────────────┘
+                                │
+               ┌────────────────┼
+               │                │             
+     ┌─────────▼──────┐ ┌───────▼──────┐
+     │ PostgreSQL DB  │ │ Mock VIP API │
+     │  (Main Data)   │ │(External Svc)│
+     └────────────────┘ └──────────────┘
 ```
